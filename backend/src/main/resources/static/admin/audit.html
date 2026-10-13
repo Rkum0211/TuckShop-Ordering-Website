@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Logs — My Tuck Shop Admin</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="../logo.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <img src="../logo.png" alt="logo">
+      <div><span class="sidebar-brand-text">My Tuck Shop</span><span class="sidebar-brand-sub">Admin Panel</span></div>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.html" class="sidebar-link"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+      <a href="orders.html"    class="sidebar-link"><i class="fas fa-receipt"></i>Orders</a>
+      <a href="products.html"  class="sidebar-link"><i class="fas fa-box-open"></i>Products</a>
+      <div class="sidebar-section-label">Management</div>
+      <a href="coupons.html"   class="sidebar-link"><i class="fas fa-tag"></i>Coupons</a>
+      <a href="settings.html"  class="sidebar-link"><i class="fas fa-cog"></i>Settings</a>
+      <a href="audit.html"     class="sidebar-link active"><i class="fas fa-clipboard-list"></i>Audit Logs</a>
+      <div class="sidebar-section-label">Links</div>
+      <a href="../menu.html"   class="sidebar-link" target="_blank"><i class="fas fa-store"></i>View Shop</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="admin-btn admin-btn-secondary w-100" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="admin-btn admin-btn-secondary admin-btn-icon sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <span class="topbar-title">Audit Logs</span>
+      </div>
+      <div class="topbar-right"><div class="topbar-avatar"><span id="adminInitial">A</span></div></div>
+    </div>
+
+    <div class="admin-content">
+      <div class="admin-table-card mb-4" style="padding:14px 20px;">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="admin-search"><i class="fas fa-search"></i><input type="text" id="auditSearch" placeholder="Search action, entity…" oninput="debounce()"></div>
+          <select class="admin-select" id="auditActionFilter" onchange="loadLogs()" style="width:160px;">
+            <option value="">All Actions</option>
+            <option>LOGIN</option><option>LOGOUT</option><option>LOGIN_FAILED</option>
+            <option>PRODUCT_CREATE</option><option>PRODUCT_UPDATE</option><option>PRODUCT_DELETE</option>
+            <option>ORDER_STATUS_UPDATE</option><option>REFUND</option>
+          </select>
+          <button class="admin-btn admin-btn-secondary" onclick="loadLogs()"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+        </div>
+      </div>
+
+      <div class="admin-table-card">
+        <div style="overflow-x:auto;">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Time</th><th>Admin</th><th>Action</th><th>Entity</th><th>Description</th><th>IP</th></tr>
+            </thead>
+            <tbody id="auditTbody">
+              <tr><td colspan="6" style="text-align:center;padding:40px;"><div class="spinner-border spinner-border-sm"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-pagination" id="auditPage"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="admin-toast-container" id="adminToastContainer"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="admin.js"></script>
+  <script>
+    requireAuth();
+    const u = JSON.parse(sessionStorage.getItem('admin_user')||'{}');
+    if(u.username) document.getElementById('adminInitial').textContent=u.username[0].toUpperCase();
+
+    let currentPage=0, totalPages=0, debTimer=null;
+
+    const DEMO_LOGS = [
+      { id:1, adminUsername:'admin', action:'LOGIN',               entityType:null, entityId:null, description:'Admin logged in',                      ipAddress:'192.168.1.1', createdAt:new Date(Date.now()-600000).toISOString()  },
+      { id:2, adminUsername:'admin', action:'ORDER_STATUS_UPDATE', entityType:'Order', entityId:'1', description:'Order TS-1001 status → CONFIRMED',   ipAddress:'192.168.1.1', createdAt:new Date(Date.now()-500000).toISOString()  },
+      { id:3, adminUsername:'admin', action:'PRODUCT_CREATE',      entityType:'Product', entityId:'12', description:'Product "Thumbs Up 500ml" created', ipAddress:'192.168.1.1', createdAt:new Date(Date.now()-400000).toISOString() },
+      { id:4, adminUsername:'admin', action:'REFUND',              entityType:'Order', entityId:'6', description:'Refund initiated for order TS-1006',  ipAddress:'192.168.1.1', createdAt:new Date(Date.now()-300000).toISOString()  },
+      { id:5, adminUsername:'admin', action:'PRODUCT_UPDATE',      entityType:'Product', entityId:'3', description:'Product "Puff Pastry" price updated', ipAddress:'192.168.1.1', createdAt:new Date(Date.now()-200000).toISOString() },
+      { id:6, adminUsername:'admin', action:'LOGIN_FAILED',        entityType:null, entityId:null, description:'Failed login attempt for "admin"',       ipAddress:'10.0.0.5',   createdAt:new Date(Date.now()-100000).toISOString()  },
+    ];
+
+    const ACTION_COLORS = {
+      LOGIN:'#10B981', LOGOUT:'#94A3B8', LOGIN_FAILED:'#EF4444',
+      PRODUCT_CREATE:'#3B82F6', PRODUCT_UPDATE:'#F59E0B', PRODUCT_DELETE:'#EF4444',
+      ORDER_STATUS_UPDATE:'#8B5CF6', REFUND:'#F59E0B',
+    };
+
+    async function loadLogs(page=0) {
+      currentPage=page;
+      const action=document.getElementById('auditActionFilter').value;
+      const search=document.getElementById('auditSearch').value.trim();
+      let params=`?page=${page}&size=25`;
+      if(action) params+=`&action=${action}`;
+      if(search) params+=`&search=${encodeURIComponent(search)}`;
+      try {
+        const data=await Api.adminAuditLogs(params);
+        const logs=data.content||data;
+        totalPages=data.totalPages||1;
+        renderLogs(logs);
+      } catch { renderLogs(DEMO_LOGS); totalPages=1; }
+      renderPagination();
+    }
+
+    function renderLogs(logs) {
+      if(!logs.length) {
+        document.getElementById('auditTbody').innerHTML=`<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--admin-muted);">No logs found</td></tr>`;
+        return;
+      }
+      document.getElementById('auditTbody').innerHTML=logs.map(l=>`
+        <tr>
+          <td style="color:var(--admin-muted);font-size:.8rem;white-space:nowrap;">${fDate(l.createdAt)}</td>
+          <td style="font-weight:600;">${l.adminUsername||'system'}</td>
+          <td><span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,.06);color:${ACTION_COLORS[l.action]||'#94A3B8'};letter-spacing:.5px;">${l.action}</span></td>
+          <td style="font-size:.82rem;color:var(--admin-muted);">${l.entityType||'—'}${l.entityId?` #${l.entityId}`:''}</td>
+          <td style="font-size:.85rem;">${l.description||'—'}</td>
+          <td style="font-size:.78rem;color:var(--admin-muted);">${l.ipAddress||'—'}</td>
+        </tr>`).join('');
+    }
+
+    function renderPagination() {
+      let html='';
+      for(let i=0;i<totalPages;i++) html+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="loadLogs(${i})">${i+1}</button>`;
+      html+=`<span class="page-info">Page ${currentPage+1} of ${totalPages}</span>`;
+      document.getElementById('auditPage').innerHTML=html;
+    }
+
+    function debounce() { clearTimeout(debTimer); debTimer=setTimeout(()=>loadLogs(0),400); }
+    loadLogs();
+  </script>
+</body>
+</html>

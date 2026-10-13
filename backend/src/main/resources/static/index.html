@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Tuck Shop — Order Snacks, Drinks & More</title>
+  <meta name="description" content="My Tuck Shop – order snacks, drinks, bakery items, chocolates and stationery online. Quick pickup, easy payment.">
+  <link rel="icon" href="logo.png" type="image/png">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ─── NAVBAR ─────────────────────────────────── -->
+  <nav class="navbar navbar-tuck navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+        <img src="logo.png" alt="My Tuck Shop Logo">
+        <span class="navbar-brand-text">My Tuck Shop</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2 gap-md-3 ms-auto">
+        <span class="shop-status-badge open" id="shopStatusBadge">
+          <span class="status-dot"></span>Checking…
+        </span>
+
+        <a href="menu.html" class="btn-hero-secondary py-2 px-3 d-none d-md-flex" style="font-size:.85rem;">
+          <i class="fas fa-utensils"></i> Menu
+        </a>
+
+        <a href="cart.html" class="cart-btn nav-link position-relative">
+          <i class="fas fa-shopping-basket me-1"></i>
+          Cart <span class="cart-count" id="cartBadge" style="display:none;">0</span>
+        </a>
+
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+          <i class="fas fa-bars" style="color:var(--primary)"></i>
+        </button>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto mt-3 mt-lg-0 gap-1">
+          <li class="nav-item"><a class="nav-link active" href="index.html"><i class="fas fa-home me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="menu.html"><i class="fas fa-utensils me-1"></i>Menu</a></li>
+          <li class="nav-item"><a class="nav-link" href="order-status.html"><i class="fas fa-receipt me-1"></i>Track Order</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─────────────────────────────────────── -->
+  <section class="hero-section">
+    <div class="hero-blob blob-1"></div>
+    <div class="hero-blob blob-2"></div>
+    <div class="hero-blob blob-3"></div>
+
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6 hero-content">
+          <div class="hero-tag">
+            <i class="fas fa-star"></i> Your Favourite Campus Shop
+          </div>
+          <h1 class="hero-title">
+            Grab Your <span class="highlight">Snacks</span><br>
+            Skip the Queue!
+          </h1>
+          <p class="hero-sub">
+            Order online from My Tuck Shop — snacks, drinks, bakery treats, chocolates & stationery.
+            Pay securely, pick up fast.
+          </p>
+
+          <div class="hero-timing">
+            <i class="fas fa-clock" style="color:var(--secondary)"></i>
+            Open: <strong class="shop-timing-text ms-1">Loading…</strong>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3">
+            <a href="menu.html" class="btn-hero-primary order-now-btn">
+              <i class="fas fa-shopping-bag"></i> Order Now
+            </a>
+            <a href="#qr-section" class="btn-hero-secondary">
+              <i class="fas fa-qrcode"></i> Scan & Order
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span class="hero-stat-num">5+</span>
+              <span class="hero-stat-label">Categories</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-stat-num">50+</span>
+              <span class="hero-stat-label">Products</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-stat-num">5 min</span>
+              <span class="hero-stat-label">Avg Pickup</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-stat-num">UPI</span>
+              <span class="hero-stat-label">& Cards</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 hero-img-wrap text-center">
+          <div class="hero-img-card">
+            <img src="logo.png" alt="My Tuck Shop" style="max-width:240px;">
+            <div class="mt-3" style="color:rgba(255,255,255,0.6);font-size:.85rem;font-family:'Outfit',sans-serif;font-weight:600;">
+              Fresh • Fast • Delicious
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CATEGORIES ───────────────────────────────── -->
+  <section class="section-categories">
+    <div class="container">
+      <div class="text-center scroll-reveal">
+        <span class="section-tag">Browse by Category</span>
+        <h2 class="section-title">What Are You Craving?</h2>
+        <p class="section-sub">Pick a category and discover your favourites</p>
+      </div>
+      <div class="category-grid" id="categoriesGrid">
+        <!-- loaded by JS or static fallback -->
+        <a href="menu.html?cat=Snacks" class="category-card scroll-reveal">
+          <div class="category-icon">🍟</div>
+          <span class="category-name">Snacks</span>
+        </a>
+        <a href="menu.html?cat=Drinks" class="category-card scroll-reveal">
+          <div class="category-icon">🥤</div>
+          <span class="category-name">Drinks</span>
+        </a>
+        <a href="menu.html?cat=Bakery" class="category-card scroll-reveal">
+          <div class="category-icon">🥐</div>
+          <span class="category-name">Bakery</span>
+        </a>
+        <a href="menu.html?cat=Chocolates" class="category-card scroll-reveal">
+          <div class="category-icon">🍫</div>
+          <span class="category-name">Chocolates</span>
+        </a>
+        <a href="menu.html?cat=Stationery" class="category-card scroll-reveal">
+          <div class="category-icon">✏️</div>
+          <span class="category-name">Stationery</span>
+        </a>
+        <a href="menu.html" class="category-card scroll-reveal">
+          <div class="category-icon">🛍️</div>
+          <span class="category-name">All Items</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── HOW IT WORKS ─────────────────────────────── -->
+  <section class="section-how">
+    <div class="container">
+      <div class="text-center scroll-reveal mb-5">
+        <span class="section-tag">Simple Steps</span>
+        <h2 class="section-title">Order in 3 Easy Steps</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4 scroll-reveal">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-title">Browse & Add to Cart</div>
+            <div class="step-desc">Explore our menu, choose your snacks and add them to your cart with one tap.</div>
+          </div>
+        </div>
+        <div class="col-md-4 scroll-reveal">
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-title">Pay Securely</div>
+            <div class="step-desc">Pay via UPI, card or wallet using Razorpay — safe, fast, and encrypted.</div>
+          </div>
+        </div>
+        <div class="col-md-4 scroll-reveal">
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-title">Pickup & Enjoy</div>
+            <div class="step-desc">Get your order token, walk to the counter, show it, and collect your order.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── QR CODE SECTION ──────────────────────────── -->
+  <section class="section-qr" id="qr-section">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-md-6 scroll-reveal" style="position:relative;z-index:2;">
+          <span class="section-tag" style="color:var(--secondary);border-color:rgba(255,179,71,0.3);">Scan & Order</span>
+          <h2 class="section-title" style="color:#fff;">Order from Your Phone</h2>
+          <p class="section-sub" style="color:rgba(255,255,255,0.65);">
+            Scan the QR code with any camera app to instantly open our online menu.
+            No app download needed.
+          </p>
+          <div class="d-flex gap-3 mt-4 flex-wrap">
+            <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.7);font-size:.9rem;">
+              <i class="fas fa-wifi" style="color:var(--secondary);"></i> Works on any device
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.7);font-size:.9rem;">
+              <i class="fas fa-lock" style="color:var(--secondary);"></i> Secure payment
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 scroll-reveal text-center">
+          <div class="qr-card">
+            <div class="qr-img-wrap mx-auto">
+              <div id="qrCodeCanvas"></div>
+            </div>
+            <div class="qr-label" style="color:rgba(255,255,255,0.5);font-size:.82rem;margin-top:12px;">
+              <i class="fas fa-qrcode me-1"></i> Scan to open menu
+            </div>
+            <div style="margin-top:16px;">
+              <a href="menu.html" style="color:var(--secondary);font-size:.85rem;font-weight:700;text-decoration:none;">
+                Or click here to browse →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TRACK ORDER ───────────────────────────────── -->
+  <section class="section-pad" style="background:#fff;">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-6 text-center scroll-reveal">
+          <span class="section-tag">Already Ordered?</span>
+          <h2 class="section-title">Track Your Order</h2>
+          <p class="section-sub mb-4">Enter your order token and phone number to check status.</p>
+          <div class="lookup-card text-start">
+            <div class="mb-3">
+              <label class="form-label">Order Token Number</label>
+              <input type="text" class="form-control" id="trackToken" placeholder="e.g. TS-1001" maxlength="20">
+            </div>
+            <div class="mb-4">
+              <label class="form-label">Mobile Number</label>
+              <input type="tel" class="form-control" id="trackPhone" placeholder="10-digit mobile number" maxlength="10">
+            </div>
+            <button class="btn-primary-custom w-100" id="trackOrderBtn" onclick="trackOrder()">
+              <i class="fas fa-search me-2"></i>Track Order
+            </button>
+            <div id="trackResult" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="footer-brand mb-3">My Tuck Shop 🛍️</div>
+          <p style="color:rgba(255,255,255,0.5);font-size:.88rem;line-height:1.7;">
+            Your go-to campus shop for snacks, drinks, bakery items, chocolates, and stationery.
+            Order online, skip the queue!
+          </p>
+        </div>
+        <div class="col-sm-4 col-lg-2 offset-lg-2">
+          <div class="footer-heading">Shop</div>
+          <ul class="footer-links">
+            <li><a href="menu.html">Menu</a></li>
+            <li><a href="menu.html?cat=Snacks">Snacks</a></li>
+            <li><a href="menu.html?cat=Drinks">Drinks</a></li>
+            <li><a href="menu.html?cat=Bakery">Bakery</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-4 col-lg-2">
+          <div class="footer-heading">Help</div>
+          <ul class="footer-links">
+            <li><a href="order-status.html">Track Order</a></li>
+            <li><a href="cart.html">My Cart</a></li>
+            <li><a href="admin/login.html">Admin Login</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-4 col-lg-2">
+          <div class="footer-heading">Payment</div>
+          <ul class="footer-links">
+            <li><a href="#">UPI</a></li>
+            <li><a href="#">Cards</a></li>
+            <li><a href="#">Wallets</a></li>
+            <li><a href="#">Net Banking</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="footer-divider">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="footer-bottom">© 2025 My Tuck Shop. All rights reserved.</div>
+        <div class="footer-bottom">Powered by <span style="color:var(--primary);font-weight:700;">Razorpay</span></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <button id="scrollTopBtn" style="position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:1.1rem;box-shadow:0 4px 16px rgba(255,107,53,0.4);opacity:0;transition:all .3s;z-index:500;" aria-label="Scroll to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Generate QR code pointing to the public menu URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuUrl = window.location.origin + window.location.pathname.replace('index.html','') + 'menu.html';
+      new QRCode(document.getElementById('qrCodeCanvas'), {
+        text: menuUrl,
+        width: 180, height: 180,
+        colorDark: '#1A1A2E',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    });
+
+    async function trackOrder() {
+      const token = document.getElementById('trackToken').value.trim().toUpperCase();
+      const phone = document.getElementById('trackPhone').value.trim();
+      const result = document.getElementById('trackResult');
+      if (!token || !phone) { showToast('Enter both token and phone number', 'warning'); return; }
+      if (!/^[6-9]\d{9}$/.test(phone)) { showToast('Enter a valid 10-digit Indian mobile number', 'error'); return; }
+      result.innerHTML = '<div class="text-center py-3"><div class="loading-spinner mx-auto"></div></div>';
+      try {
+        const order = await Api.getOrder(token, phone);
+        window.location.href = `order-status.html?token=${encodeURIComponent(token)}&phone=${encodeURIComponent(phone)}`;
+      } catch(e) {
+        result.innerHTML = `<div class="alert alert-danger" style="border-radius:10px;font-size:.88rem;">${e.message || 'Order not found. Check your token and phone number.'}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

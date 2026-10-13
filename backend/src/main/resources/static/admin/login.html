@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — My Tuck Shop</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="../logo.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body" style="display:block;background:var(--admin-bg);">
+
+  <div class="admin-login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="../logo.png" alt="My Tuck Shop">
+      </div>
+      <h1 class="login-title">Admin Login</h1>
+      <p class="login-sub">Sign in to manage your tuck shop</p>
+
+      <div id="loginError" class="d-none mb-3" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px;color:#EF4444;font-size:.85rem;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="loginErrorMsg"></span>
+      </div>
+
+      <form id="loginForm" novalidate onsubmit="return false;">
+        <div class="mb-4">
+          <label class="admin-form-label">Username</label>
+          <div style="position:relative;">
+            <i class="fas fa-user" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.25);font-size:.85rem;"></i>
+            <input type="text" class="admin-input" id="adminUsername" placeholder="admin" style="padding-left:38px;" autocomplete="username" required>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="admin-form-label">Password</label>
+          <div style="position:relative;">
+            <i class="fas fa-lock" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.25);font-size:.85rem;"></i>
+            <input type="password" class="admin-input" id="adminPassword" placeholder="••••••••" style="padding-left:38px;padding-right:44px;" autocomplete="current-password" required>
+            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:.85rem;" onclick="togglePw()">
+              <i class="fas fa-eye" id="pwToggleIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="admin-btn admin-btn-primary w-100" id="loginBtn" onclick="doLogin()" style="justify-content:center;padding:13px;font-size:.95rem;">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:24px;">
+        <a href="../index.html" style="color:var(--admin-muted);font-size:.82rem;text-decoration:none;">
+          <i class="fas fa-arrow-left me-1"></i>Back to Shop
+        </a>
+      </div>
+
+      <!-- Rate limit warning -->
+      <div id="lockoutMsg" class="d-none mt-3" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px;color:#F59E0B;font-size:.82rem;text-align:center;">
+        <i class="fas fa-clock me-1"></i>Too many attempts. Please wait <span id="lockoutTimer">30</span> seconds.
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="admin-toast-container" id="adminToastContainer"></div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (sessionStorage.getItem('admin_token')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    let failedAttempts = 0;
+    let lockoutUntil   = 0;
+
+    function showLoginError(msg) {
+      const el = document.getElementById('loginError');
+      el.classList.remove('d-none');
+      el.style.display='flex';
+      document.getElementById('loginErrorMsg').textContent = msg;
+    }
+    function hideLoginError() {
+      const el = document.getElementById('loginError');
+      el.classList.add('d-none');
+      el.style.display='none';
+    }
+
+    function togglePw() {
+      const inp  = document.getElementById('adminPassword');
+      const icon = document.getElementById('pwToggleIcon');
+      if (inp.type === 'password') { inp.type='text'; icon.className='fas fa-eye-slash'; }
+      else                         { inp.type='password'; icon.className='fas fa-eye'; }
+    }
+
+    async function doLogin() {
+      if (Date.now() < lockoutUntil) return;
+
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      if (!username || !password) { showLoginError('Enter username and password'); return; }
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in…';
+      hideLoginError();
+
+      try {
+        const resp = await Api.adminLogin({ username, password });
+        sessionStorage.setItem('admin_token', resp.token);
+        sessionStorage.setItem('admin_user',  JSON.stringify({ username: resp.username, role: resp.role }));
+        window.location.href = 'dashboard.html';
+      } catch(e) {
+        failedAttempts++;
+        const msg = e.message || 'Invalid username or password';
+        showLoginError(msg);
+
+        if (failedAttempts >= 3) {
+          const delay = Math.min(failedAttempts * 15, 120);
+          lockoutUntil = Date.now() + delay * 1000;
+          const lockEl = document.getElementById('lockoutMsg');
+          lockEl.classList.remove('d-none');
+          let t = delay;
+          const timer = setInterval(() => {
+            document.getElementById('lockoutTimer').textContent = --t;
+            if (t <= 0) { clearInterval(timer); lockEl.classList.add('d-none'); failedAttempts = 0; }
+          }, 1000);
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Sign In';
+      }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  </script>
+</body>
+</html>

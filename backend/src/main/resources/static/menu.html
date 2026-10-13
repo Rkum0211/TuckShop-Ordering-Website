@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu — My Tuck Shop</title>
+  <meta name="description" content="Browse My Tuck Shop's full menu — snacks, drinks, bakery, chocolates, stationery.">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ─── NAVBAR ─────────────────────────────────── -->
+  <nav class="navbar navbar-tuck navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+        <img src="logo.png" alt="My Tuck Shop Logo">
+        <span class="navbar-brand-text">My Tuck Shop</span>
+      </a>
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <span class="shop-status-badge open" id="shopStatusBadge"><span class="status-dot"></span>…</span>
+        <a href="cart.html" class="cart-btn nav-link position-relative">
+          <i class="fas fa-shopping-basket me-1"></i>Cart
+          <span class="cart-count" style="display:none;">0</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+          <i class="fas fa-bars" style="color:var(--primary)"></i>
+        </button>
+      </div>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto mt-3 mt-lg-0 gap-1">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="menu.html">Menu</a></li>
+          <li class="nav-item"><a class="nav-link" href="order-status.html">Track Order</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── PAGE HEADER ──────────────────────────────── -->
+  <div style="background:linear-gradient(135deg,#1A1A2E,#16213E);padding:48px 0 32px;">
+    <div class="container">
+      <span class="section-tag" style="color:var(--secondary);border-color:rgba(255,179,71,.3);">Our Menu</span>
+      <h1 class="hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem);margin-top:6px;">
+        Order What You <span class="highlight">Love</span>
+      </h1>
+      <p style="color:rgba(255,255,255,.6);font-size:.95rem;margin-top:8px;">
+        Fresh picks updated daily · Secure UPI/Card payment
+      </p>
+    </div>
+  </div>
+
+  <!-- ─── SEARCH & FILTER ────────────────────────── -->
+  <div class="container" style="margin-top:-20px;position:relative;z-index:10;">
+    <div class="search-filter-bar">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-5">
+          <div class="search-input-wrap">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search snacks, drinks…" oninput="filterProducts()">
+          </div>
+        </div>
+        <div class="col-md-7">
+          <div class="d-flex gap-2 flex-wrap" id="categoryFilters">
+            <button class="filter-chip active" data-cat="" onclick="setCategory(this,'')">All</button>
+            <button class="filter-chip" data-cat="Snacks"     onclick="setCategory(this,'Snacks')">🍟 Snacks</button>
+            <button class="filter-chip" data-cat="Drinks"     onclick="setCategory(this,'Drinks')">🥤 Drinks</button>
+            <button class="filter-chip" data-cat="Bakery"     onclick="setCategory(this,'Bakery')">🥐 Bakery</button>
+            <button class="filter-chip" data-cat="Chocolates" onclick="setCategory(this,'Chocolates')">🍫 Chocolates</button>
+            <button class="filter-chip" data-cat="Stationery" onclick="setCategory(this,'Stationery')">✏️ Stationery</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── PRODUCT GRID ──────────────────────────── -->
+  <section class="section-menu">
+    <div class="container">
+      <!-- Closed Banner -->
+      <div id="closedBanner" class="alert mb-4 d-none" style="background:rgba(231,76,60,.1);border:1.5px solid rgba(231,76,60,.25);border-radius:14px;color:#E74C3C;font-weight:600;">
+        <i class="fas fa-clock me-2"></i>The shop is currently <strong>closed</strong>. Orders are paused.
+      </div>
+
+      <!-- Loading -->
+      <div id="productsLoading" class="text-center py-5">
+        <div class="loading-spinner mx-auto mb-3"></div>
+        <div style="color:var(--text-secondary);font-size:.9rem;">Loading menu…</div>
+      </div>
+
+      <!-- Empty -->
+      <div id="productsEmpty" class="empty-state d-none">
+        <div class="empty-state-icon">🛒</div>
+        <div class="empty-state-title">No products found</div>
+        <div class="empty-state-sub">Try a different category or search term</div>
+      </div>
+
+      <!-- Grid -->
+      <div class="row g-4" id="productsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ─── FLOATING CART ─────────────────────────── -->
+  <div id="floatingCart" class="d-none" style="position:fixed;bottom:80px;right:24px;z-index:500;">
+    <a href="cart.html" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;text-decoration:none;border-radius:100px;padding:14px 22px;font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem;box-shadow:0 8px 28px rgba(255,107,53,.5);transition:all .3s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+      <i class="fas fa-shopping-basket"></i>
+      <span>View Cart</span>
+      <span id="floatingCartCount" style="background:rgba(255,255,255,.25);border-radius:100px;padding:2px 10px;font-size:.82rem;">0 items</span>
+    </a>
+  </div>
+
+  <!-- Scroll Top -->
+  <button id="scrollTopBtn" style="position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:1.1rem;box-shadow:0 4px 16px rgba(255,107,53,.4);opacity:0;transition:all .3s;z-index:500;" aria-label="Scroll to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <!-- Toast container -->
+  <div class="toast-container-custom" id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    let allProducts = [];
+    let activeCategory = '';
+
+    const PRODUCT_IMAGES = {
+      'Snacks':     'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&q=80',
+      'Drinks':     'https://images.unsplash.com/photo-1625772452859-1c03d5bf1137?w=400&q=80',
+      'Bakery':     'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
+      'Chocolates': 'https://images.unsplash.com/photo-1549007953-2f2dc0b24019?w=400&q=80',
+      'Stationery': 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=400&q=80',
+      'default':    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80',
+    };
+
+    // Sample fallback data when API is offline
+    const SAMPLE_PRODUCTS = [
+      { id:1, name:'Classic Samosa',       category:'Snacks',     description:'Crispy golden samosas with spicy potato filling.',      price:15,  discountedPrice:15, stockQuantity:50, maxQuantityPerOrder:5,  available:true, imageUrl:'' },
+      { id:2, name:'Masala Chips',         category:'Snacks',     description:'Tangy masala-flavoured potato chips, family pack.',      price:30,  discountedPrice:25, stockQuantity:30, maxQuantityPerOrder:5,  available:true, imageUrl:'' },
+      { id:3, name:'Puff Pastry',          category:'Bakery',     description:'Flaky pastry stuffed with spiced vegetables.',           price:20,  discountedPrice:20, stockQuantity:20, maxQuantityPerOrder:5,  available:true, imageUrl:'' },
+      { id:4, name:'Chocolate Muffin',     category:'Bakery',     description:'Soft, moist chocolate muffin with chocolate chips.',     price:35,  discountedPrice:30, stockQuantity:15, maxQuantityPerOrder:3,  available:true, imageUrl:'' },
+      { id:5, name:'Mango Frooti',         category:'Drinks',     description:'Chilled mango juice drink — 200ml tetra pack.',          price:20,  discountedPrice:20, stockQuantity:60, maxQuantityPerOrder:6,  available:true, imageUrl:'' },
+      { id:6, name:'Cold Coffee',          category:'Drinks',     description:'Rich chilled coffee with milk, served cold.',            price:45,  discountedPrice:40, stockQuantity:25, maxQuantityPerOrder:4,  available:true, imageUrl:'' },
+      { id:7, name:'Dairy Milk Silk',      category:'Chocolates', description:'Smooth creamy chocolate bar, 60g.',                      price:60,  discountedPrice:55, stockQuantity:40, maxQuantityPerOrder:5,  available:true, imageUrl:'' },
+      { id:8, name:'KitKat',              category:'Chocolates', description:'Crisp wafer fingers covered in smooth chocolate.',        price:30,  discountedPrice:30, stockQuantity:50, maxQuantityPerOrder:5,  available:true, imageUrl:'' },
+      { id:9, name:'Ballpoint Pen',       category:'Stationery', description:'Smooth blue ink pen, pack of 5.',                        price:25,  discountedPrice:25, stockQuantity:100,maxQuantityPerOrder:10, available:true, imageUrl:'' },
+      { id:10,name:'Spiral Notebook A5',  category:'Stationery', description:'200-page ruled spiral notebook, A5 size.',               price:80,  discountedPrice:70, stockQuantity:30, maxQuantityPerOrder:3,  available:true, imageUrl:'' },
+      { id:11,name:'Wafer Biscuits',      category:'Snacks',     description:'Light vanilla wafer biscuits — sharing pack.',           price:20,  discountedPrice:18, stockQuantity:0,  maxQuantityPerOrder:5,  available:false,imageUrl:'' },
+      { id:12,name:'Thumbs Up 500ml',     category:'Drinks',     description:'Ice cold cola drink, 500ml PET bottle.',                 price:35,  discountedPrice:35, stockQuantity:45, maxQuantityPerOrder:6,  available:true, imageUrl:'' },
+    ];
+
+    async function loadProducts() {
+      try {
+        const data = await Api.products();
+        allProducts = data.content || data || SAMPLE_PRODUCTS;
+      } catch {
+        allProducts = SAMPLE_PRODUCTS;
+      }
+      document.getElementById('productsLoading').style.display = 'none';
+      filterProducts();
+    }
+
+    function setCategory(btn, cat) {
+      document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = cat;
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const q    = document.getElementById('searchInput').value.toLowerCase().trim();
+      let items  = allProducts;
+      if (activeCategory) items = items.filter(p => p.category === activeCategory);
+      if (q)              items = items.filter(p => p.name.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q));
+      renderProducts(items);
+    }
+
+    function renderProducts(items) {
+      const grid  = document.getElementById('productsGrid');
+      const empty = document.getElementById('productsEmpty');
+      if (!items.length) { grid.innerHTML = ''; empty.classList.remove('d-none'); return; }
+      empty.classList.add('d-none');
+      grid.innerHTML = items.map(p => productCard(p)).join('');
+      Cart.updateBadge();
+      updateFloatingCart();
+    }
+
+    function productCard(p) {
+      const img       = p.imageUrl || PRODUCT_IMAGES[p.category] || PRODUCT_IMAGES.default;
+      const isSoldOut = !p.available || p.stockQuantity === 0;
+      const hasDiscount = p.discountedPrice && p.discountedPrice < p.price;
+      const discount  = hasDiscount ? Math.round((1 - p.discountedPrice/p.price)*100) : 0;
+      return `
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="${img}" alt="${p.name}" loading="lazy" onerror="this.src='${PRODUCT_IMAGES.default}'">
+            <span class="product-badge ${isSoldOut ? 'badge-soldout':'badge-available'}">${isSoldOut?'Sold Out':'Available'}</span>
+            ${hasDiscount?`<span class="product-badge badge-discount">-${discount}%</span>`:''}
+          </div>
+          <div class="product-body">
+            <div class="product-category">${p.category}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.description||''}</div>
+            <div class="product-price-row">
+              <div>
+                <span class="product-price">₹${p.discountedPrice||p.price}</span>
+                ${hasDiscount?`<span class="product-price-original">₹${p.price}</span>`:''}
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(this,-1,${p.maxQuantityPerOrder||10})" ${isSoldOut?'disabled':''}>−</button>
+                <input class="qty-input" type="number" value="1" min="1" max="${p.maxQuantityPerOrder||10}" readonly>
+                <button class="qty-btn" onclick="changeQty(this,1,${p.maxQuantityPerOrder||10})" ${isSoldOut?'disabled':''}>+</button>
+              </div>
+            </div>
+            <button class="btn-add-cart" onclick='addToCart(${JSON.stringify(p)},this)' ${isSoldOut?'disabled':''}>
+              ${isSoldOut?'<i class="fas fa-times-circle me-1"></i>Sold Out':'<i class="fas fa-plus me-1"></i>Add to Cart'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function changeQty(btn, delta, max) {
+      const wrap = btn.closest('.qty-control');
+      const inp  = wrap.querySelector('.qty-input');
+      let   val  = parseInt(inp.value) + delta;
+      inp.value  = Math.min(Math.max(1, val), max);
+    }
+
+    function addToCart(product, btn) {
+      const wrap = btn.closest('.product-body');
+      const qty  = parseInt(wrap.querySelector('.qty-input').value) || 1;
+      Cart.addItem(product, qty);
+      showToast(`${product.name} added to cart!`, 'success');
+      // Animate button
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check me-1"></i>Added!';
+      btn.style.background = 'var(--accent)';
+      setTimeout(() => { btn.innerHTML = orig; btn.style.background=''; }, 1200);
+      updateFloatingCart();
+    }
+
+    function updateFloatingCart() {
+      const cnt = Cart.getCount();
+      const fc  = document.getElementById('floatingCart');
+      const fcn = document.getElementById('floatingCartCount');
+      if (cnt > 0) { fc.classList.remove('d-none'); fcn.textContent = `${cnt} item${cnt>1?'s':''}`; }
+      else           fc.classList.add('d-none');
+    }
+
+    // Read category from URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const cat = new URLSearchParams(window.location.search).get('cat');
+      if (cat) {
+        activeCategory = cat;
+        document.querySelectorAll('.filter-chip').forEach(b => {
+          b.classList.remove('active');
+          if (b.dataset.cat === cat) b.classList.add('active');
+        });
+      }
+      loadProducts();
+      updateFloatingCart();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order — My Tuck Shop</title>
+  <meta name="description" content="Track your My Tuck Shop order status using your token and phone number.">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-tuck navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+        <img src="logo.png" alt="My Tuck Shop">
+        <span class="navbar-brand-text">My Tuck Shop</span>
+      </a>
+      <div class="ms-auto d-flex gap-2">
+        <a href="menu.html" class="btn-outline-custom py-2 px-3 d-none d-md-flex" style="font-size:.85rem;">Menu</a>
+        <a href="cart.html" class="cart-btn nav-link position-relative">
+          <i class="fas fa-shopping-basket me-1"></i>Cart
+          <span class="cart-count" style="display:none;">0</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#1A1A2E,#16213E);padding:48px 0 32px;">
+    <div class="container text-center">
+      <span class="section-tag" style="color:var(--secondary);border-color:rgba(255,179,71,.3);">Real-time Updates</span>
+      <h1 class="hero-title" style="font-size:clamp(1.6rem,3.5vw,2.4rem);margin-top:8px;">Track Your Order</h1>
+      <p style="color:rgba(255,255,255,.55);font-size:.9rem;margin-top:6px;">Enter your token and phone to get live status</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding:48px 16px;max-width:680px;">
+
+    <!-- Lookup Form -->
+    <div class="lookup-card" id="lookupCard">
+      <h2 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:20px;">
+        <i class="fas fa-search me-2" style="color:var(--primary);"></i>Find My Order
+      </h2>
+      <div class="mb-3">
+        <label class="form-label">Order Token Number *</label>
+        <input type="text" class="form-control" id="tokenInput" placeholder="e.g. TS-1001" maxlength="20" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Registered Mobile Number *</label>
+        <input type="tel" class="form-control" id="phoneInput" placeholder="10-digit Indian mobile number" maxlength="10">
+      </div>
+      <button class="btn-primary-custom w-100" id="lookupBtn" onclick="lookupOrder()">
+        <i class="fas fa-search me-2"></i>Track Order
+      </button>
+      <div id="lookupError" class="mt-3"></div>
+    </div>
+
+    <!-- Order Status Result -->
+    <div id="orderResult" style="display:none;margin-top:24px;">
+      <!-- Status Header -->
+      <div id="statusHeader" style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;text-align:center;margin-bottom:20px;box-shadow:var(--shadow-sm);">
+        <div id="statusIcon" style="font-size:2.8rem;margin-bottom:12px;"></div>
+        <div id="statusLabel" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:6px;"></div>
+        <div id="statusDesc" style="color:var(--text-secondary);font-size:.88rem;"></div>
+        <div id="paymentBadge" style="margin-top:12px;"></div>
+      </div>
+
+      <!-- Progress Tracker -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-sm);">
+        <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:20px;">Order Progress</h3>
+        <div class="status-tracker" id="statusTracker"></div>
+      </div>
+
+      <!-- Order Info -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-sm);">
+        <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:16px;">Order Details</h3>
+        <div id="orderInfo"></div>
+        <div id="orderItemsList" style="margin-top:16px;border-top:1.5px dashed var(--border);padding-top:16px;"></div>
+      </div>
+
+      <!-- Refresh -->
+      <div class="text-center mt-3">
+        <button class="btn-outline-custom" onclick="refreshOrder()" id="refreshBtn">
+          <i class="fas fa-sync-alt me-2"></i>Refresh Status
+        </button>
+        <div style="font-size:.75rem;color:var(--text-light);margin-top:8px;">Auto-refreshes every 30 seconds</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container-custom" id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let currentToken = '', currentPhone = '', refreshTimer = null;
+
+    const STATUS_STEPS = ['PENDING','CONFIRMED','PREPARING','READY_FOR_PICKUP','COMPLETED'];
+    const STATUS_META  = {
+      PENDING:          { icon:'⏳', label:'Order Pending',        desc:'Waiting for shop confirmation…', color:'var(--warning)' },
+      CONFIRMED:        { icon:'✅', label:'Order Confirmed',       desc:'Shop has confirmed your order!', color:'var(--info)' },
+      PREPARING:        { icon:'👨‍🍳', label:'Being Prepared',        desc:'Our team is preparing your order.', color:'var(--secondary)' },
+      READY_FOR_PICKUP: { icon:'🎉', label:'Ready for Pickup!',     desc:'Your order is ready! Come collect it now.', color:'var(--accent)' },
+      COMPLETED:        { icon:'🏁', label:'Completed',             desc:'Order collected. Enjoy!', color:'var(--accent)' },
+      CANCELLED:        { icon:'❌', label:'Order Cancelled',        desc:'This order has been cancelled.', color:'var(--danger)' },
+    };
+    const PAYMENT_META = {
+      PAID:     { label:'PAID',     bg:'rgba(76,175,125,.15)',  color:'var(--accent)' },
+      PENDING:  { label:'PENDING',  bg:'rgba(245,158,11,.12)',  color:'var(--warning)' },
+      FAILED:   { label:'FAILED',   bg:'rgba(231,76,60,.12)',   color:'var(--danger)' },
+      REFUNDED: { label:'REFUNDED', bg:'rgba(245,158,11,.12)',  color:'var(--warning)' },
+    };
+
+    async function lookupOrder() {
+      const token = document.getElementById('tokenInput').value.trim().toUpperCase();
+      const phone = document.getElementById('phoneInput').value.trim();
+      const errEl = document.getElementById('lookupError');
+
+      if (!token) { errEl.innerHTML='<div class="alert alert-warning" style="border-radius:10px;font-size:.85rem;">Enter your order token number</div>'; return; }
+      if (!isValidMobile(phone)) { errEl.innerHTML='<div class="alert alert-warning" style="border-radius:10px;font-size:.85rem;">Enter a valid 10-digit mobile number</div>'; return; }
+
+      const btn = document.getElementById('lookupBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Looking up…';
+      errEl.innerHTML = '';
+
+      try {
+        const order = await Api.getOrder(token, phone);
+        currentToken = token;
+        currentPhone = phone;
+        displayOrder(order);
+        startAutoRefresh();
+      } catch(e) {
+        errEl.innerHTML = `<div class="alert alert-danger" style="border-radius:10px;font-size:.85rem;"><i class="fas fa-times-circle me-2"></i>${e.message||'Order not found. Check your token and phone number.'}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search me-2"></i>Track Order';
+      }
+    }
+
+    function displayOrder(order) {
+      document.getElementById('orderResult').style.display='block';
+      document.getElementById('lookupCard').scrollIntoView({behavior:'smooth',block:'start'});
+
+      const st  = STATUS_META[order.orderStatus] || STATUS_META.PENDING;
+      const pm  = PAYMENT_META[order.paymentStatus] || PAYMENT_META.PENDING;
+
+      // Status header
+      document.getElementById('statusIcon').textContent  = st.icon;
+      document.getElementById('statusLabel').textContent = st.label;
+      document.getElementById('statusLabel').style.color = st.color;
+      document.getElementById('statusDesc').textContent  = st.desc;
+      document.getElementById('paymentBadge').innerHTML  = `<span style="background:${pm.bg};color:${pm.color};font-weight:700;font-size:.8rem;padding:4px 14px;border-radius:100px;">💳 Payment: ${pm.label}</span>`;
+
+      // Progress tracker (not for CANCELLED)
+      const steps = STATUS_STEPS;
+      const curIdx = steps.indexOf(order.orderStatus);
+      document.getElementById('statusTracker').innerHTML = steps.map((s,i) => {
+        const done   = i < curIdx;
+        const active = i === curIdx;
+        const icons  = ['⏳','✅','👨‍🍳','🎉','🏁'];
+        const labels = ['Pending','Confirmed','Preparing','Ready','Done'];
+        return `<div class="status-step ${done?'done':''} ${active?'active':''}">
+          <div class="status-dot-track">${icons[i]}</div>
+          <div class="status-step-label">${labels[i]}</div>
+        </div>`;
+      }).join('');
+
+      // Order info
+      document.getElementById('orderInfo').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="font-size:.85rem;"><span style="color:var(--text-secondary);">Token</span><br><strong style="color:var(--primary);font-size:1rem;">${order.tokenNumber}</strong></div>
+          <div style="font-size:.85rem;"><span style="color:var(--text-secondary);">Customer</span><br><strong>${order.customerName}</strong></div>
+          <div style="font-size:.85rem;"><span style="color:var(--text-secondary);">Pickup At</span><br><strong>${order.pickupLocation}</strong></div>
+          <div style="font-size:.85rem;"><span style="color:var(--text-secondary);">Total</span><br><strong style="color:var(--primary);">${formatINR(order.totalAmount)}</strong></div>
+          <div style="font-size:.85rem;grid-column:1/-1;"><span style="color:var(--text-secondary);">Ordered At</span><br><strong>${new Date(order.createdAt).toLocaleString('en-IN')}</strong></div>
+          ${order.notes?`<div style="font-size:.85rem;grid-column:1/-1;"><span style="color:var(--text-secondary);">Notes</span><br><em>${order.notes}</em></div>`:''}
+        </div>`;
+
+      // Items
+      if (order.items?.length) {
+        document.getElementById('orderItemsList').innerHTML = `
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:12px;">Items Ordered</div>
+          ${order.items.map(i=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.85rem;">
+              <span>${i.productName} <span style="color:var(--text-secondary);">× ${i.quantity}</span></span>
+              <span style="font-weight:700;">${formatINR(i.totalPrice)}</span>
+            </div>`).join('')}
+          <div style="border-top:1.5px dashed var(--border);padding-top:10px;display:flex;justify-content:space-between;font-weight:800;color:var(--primary);">
+            <span>Total</span><span>${formatINR(order.totalAmount)}</span>
+          </div>`;
+      }
+    }
+
+    async function refreshOrder() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Refreshing…';
+      try {
+        const order = await Api.getOrder(currentToken, currentPhone);
+        displayOrder(order);
+        showToast('Status updated', 'success', 2000);
+      } catch(e) {
+        showToast('Could not refresh. Try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Refresh Status';
+      }
+    }
+
+    function startAutoRefresh() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(() => {
+        if (currentToken && currentPhone) refreshOrder();
+      }, 30000);
+    }
+
+    // Pre-fill from URL params
+    document.addEventListener('DOMContentLoaded', () => {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('token')) {
+        document.getElementById('tokenInput').value = p.get('token').toUpperCase();
+        if (p.get('phone')) {
+          document.getElementById('phoneInput').value = p.get('phone');
+          lookupOrder();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
